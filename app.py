@@ -178,14 +178,13 @@ def criar_dataframe_procedimentos(registros):
 
                 trecho = linha[pos_funcao + len(funcao):]
 
-                # remove tudo após a data
-                match_data = re.search(
-                    r"\d{2}/\d{2}/\d{4}",
-                    trecho
-                )
+            data_match = re.search(
+                r"\d{2}/\d{2}/\d{4}",
+                trecho
+            )
 
-        if match_data:
-            trecho = trecho[:match_data.start()]
+            if data_match:
+                trecho = trecho[:data_match.start()]
 
         # remove números e %
         trecho = re.sub(
