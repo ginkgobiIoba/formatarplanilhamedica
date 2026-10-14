@@ -74,9 +74,10 @@ if uploaded_file is not None:
 
                 # Chamada do modelo Gemini 1.5 Flash
                 response = client.models.generate_content(
-                    model='gemini-1.5-flash',
+                    model='gemini-2.5-flash',
                     contents=[uploaded_pdf, prompt]
                 )
+                
 
                 # Limpeza e parsing do JSON
                 raw_json = response.text.replace("```json", "").replace("```", "").strip()
