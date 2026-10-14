@@ -17,14 +17,14 @@ st.markdown("Suba o relatório em PDF do mês para normalizar os dados via Gemin
 
 # Sidebar - Configurações
 st.sidebar.header("⚙️ Configurações")
-api_key = st.sidebar.text_input("Insira sua API Key Gratuita do Gemini:", type="password")
+raw_api_key = st.sidebar.text_input("Insira sua API Key Gratuita do Gemini:", type="password")
+
+# Remove espaços em branco antes ou depois que surgem ao copiar/colar
+api_key = raw_api_key.strip() if raw_api_key else ""
 
 if not api_key:
     st.info("👈 Insira sua API Key do Gemini (gerada no Google AI Studio) no menu lateral para começar.")
     st.stop()
-
-# Configura a chave
-genai.configure(api_key=api_key)
 
 # Upload do PDF
 uploaded_file = st.file_uploader("Suba o relatório PDF do mês:", type=["pdf"])
@@ -34,12 +34,16 @@ if uploaded_file is not None:
         with st.spinner("Analisando o relatório e extraindo procedimentos..."):
             temp_path = None
             try:
-                # 1. Salva o arquivo temporariamente no disco para passar ao Gemini
+                # Configura a API Key do Gemini
+                genai.configure(api_key=api_key)
+
+                # Salva o arquivo temporariamente no disco
                 with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
                     tmp_file.write(uploaded_file.getvalue())
                     temp_path = tmp_file.name
 
-                model = genai.GenerativeModel('gemini-1.5-pro')
+                # Modelo padrão rápido e gratuito
+                model = genai.GenerativeModel('gemini-1.5-flash')
                 
                 prompt = """
                 Você é um especialista em extração de dados médicos.
@@ -67,11 +71,11 @@ if uploaded_file is not None:
                 Não inclua nenhuma introdução ou texto além do JSON.
                 """
                 
-                # 2. Faz o upload informando o caminho temporário no disco
+                # Upload do arquivo PDF para a API do Gemini
                 pdf_file = genai.upload_file(temp_path, mime_type="application/pdf")
                 response = model.generate_content([pdf_file, prompt])
                 
-                # Tratamento do JSON
+                # Limpeza de formatação Markdown caso retorne
                 raw_json = response.text.replace("```json", "").replace("```", "").strip()
                 data = json.loads(raw_json)
                 
@@ -82,7 +86,6 @@ if uploaded_file is not None:
                 st.error(f"Erro ao processar o documento: {e}")
 
             finally:
-                # 3. Remove o arquivo temporário após o envio
                 if temp_path and os.path.exists(temp_path):
                     os.remove(temp_path)
 
