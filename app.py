@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import google.generativeai as genai
 import json
+import tempfile
+import os
 
 # Configuração da página
 st.set_page_config(
@@ -30,7 +32,13 @@ uploaded_file = st.file_uploader("Suba o relatório PDF do mês:", type=["pdf"])
 if uploaded_file is not None:
     if st.button("🚀 Processar e Normalizar Documento", type="primary"):
         with st.spinner("Analisando o relatório e extraindo procedimentos..."):
+            temp_path = None
             try:
+                # 1. Salva o arquivo temporariamente no disco para passar ao Gemini
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+                    tmp_file.write(uploaded_file.getvalue())
+                    temp_path = tmp_file.name
+
                 model = genai.GenerativeModel('gemini-1.5-pro')
                 
                 prompt = """
@@ -59,7 +67,8 @@ if uploaded_file is not None:
                 Não inclua nenhuma introdução ou texto além do JSON.
                 """
                 
-                pdf_file = genai.upload_file(uploaded_file)
+                # 2. Faz o upload informando o caminho temporário no disco
+                pdf_file = genai.upload_file(temp_path, mime_type="application/pdf")
                 response = model.generate_content([pdf_file, prompt])
                 
                 # Tratamento do JSON
@@ -68,8 +77,14 @@ if uploaded_file is not None:
                 
                 st.session_state['df'] = pd.DataFrame(data)
                 st.success("✅ Relatório processado com sucesso!")
+
             except Exception as e:
                 st.error(f"Erro ao processar o documento: {e}")
+
+            finally:
+                # 3. Remove o arquivo temporário após o envio
+                if temp_path and os.path.exists(temp_path):
+                    os.remove(temp_path)
 
 # Filtros e visualização
 if 'df' in st.session_state:
