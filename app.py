@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 import json
 import tempfile
 import os
@@ -17,13 +18,13 @@ st.markdown("Suba o relatório em PDF do mês para normalizar os dados via Gemin
 
 # Sidebar - Configurações
 st.sidebar.header("⚙️ Configurações")
-raw_api_key = st.sidebar.text_input("Insira sua API Key Gratuita do Gemini:", type="password")
+raw_api_key = st.sidebar.text_input("Insira sua Gemini API Key:", type="password")
 
-# Remove espaços em branco antes ou depois que surgem ao copiar/colar
+# Limpa espaços em branco
 api_key = raw_api_key.strip() if raw_api_key else ""
 
 if not api_key:
-    st.info("👈 Insira sua API Key do Gemini (gerada no Google AI Studio) no menu lateral para começar.")
+    st.info("👈 Insira sua API Key do Gemini na barra lateral para começar.")
     st.stop()
 
 # Upload do PDF
@@ -34,17 +35,14 @@ if uploaded_file is not None:
         with st.spinner("Analisando o relatório e extraindo procedimentos..."):
             temp_path = None
             try:
-                # Configura a API Key do Gemini
-                genai.configure(api_key=api_key)
+                # Inicializa o cliente oficial com a nova SDK (suporta chaves AQ... e AIzaSy...)
+                client = genai.Client(api_key=api_key)
 
-                # Salva o arquivo temporariamente no disco
+                # Salva o arquivo temporariamente em disco
                 with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
                     tmp_file.write(uploaded_file.getvalue())
                     temp_path = tmp_file.name
 
-                # Modelo padrão rápido e gratuito
-                model = genai.GenerativeModel('gemini-1.5-flash')
-                
                 prompt = """
                 Você é um especialista em extração de dados médicos.
                 Extraia TODOS os procedimentos e itens de repasse deste relatório PDF.
@@ -70,15 +68,20 @@ if uploaded_file is not None:
                 
                 Não inclua nenhuma introdução ou texto além do JSON.
                 """
-                
-                # Upload do arquivo PDF para a API do Gemini
-                pdf_file = genai.upload_file(temp_path, mime_type="application/pdf")
-                response = model.generate_content([pdf_file, prompt])
-                
-                # Limpeza de formatação Markdown caso retorne
+
+                # Upload do arquivo PDF usando o File API
+                uploaded_pdf = client.files.upload(file=temp_path)
+
+                # Chamada do modelo Gemini 1.5 Flash
+                response = client.models.generate_content(
+                    model='gemini-1.5-flash',
+                    contents=[uploaded_pdf, prompt]
+                )
+
+                # Limpeza e parsing do JSON
                 raw_json = response.text.replace("```json", "").replace("```", "").strip()
                 data = json.loads(raw_json)
-                
+
                 st.session_state['df'] = pd.DataFrame(data)
                 st.success("✅ Relatório processado com sucesso!")
 
