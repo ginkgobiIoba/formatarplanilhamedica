@@ -71,9 +71,28 @@ if uploaded_file is not None:
                 # Upload do arquivo PDF usando o File API
                 uploaded_pdf = client.files.upload(file=temp_path)
 
-                # Chamada do modelo atualizado (gemini-3.8-flash)
+                # 🔍 Busca dinâmica de modelos disponíveis na sua chave
+                modelos_disponiveis = [m.name for m in client.models.list() if 'generateContent' in getattr(m, 'supported_actions', []) or 'generateContent' in getattr(m, 'supported_generation_methods', [])]
+                
+                # Seleciona o melhor modelo disponível (dando preferência para flash/pro)
+                modelo_escolhido = None
+                for target in ['flash', 'pro', 'gemini']:
+                    for m in modelos_disponiveis:
+                        if target in m:
+                            modelo_escolhido = m
+                            break
+                    if modelo_escolhido:
+                        break
+
+                if not modelo_escolhido and modelos_disponiveis:
+                    modelo_escolhido = modelos_disponiveis[0]
+
+                if not modelo_escolhido:
+                    raise Exception("Nenhum modelo compatível foi encontrado para esta chave API.")
+
+                # Executa a geração usando o modelo detectado automaticamente
                 response = client.models.generate_content(
-                    model='gemini-3.8-flash',
+                    model=modelo_escolhido,
                     contents=[uploaded_pdf, prompt]
                 )
 
@@ -82,7 +101,7 @@ if uploaded_file is not None:
                 data = json.loads(raw_json)
 
                 st.session_state['df'] = pd.DataFrame(data)
-                st.success("✅ Relatório processado com sucesso!")
+                st.success(f"✅ Relatório processado com sucesso usando o modelo: {modelo_escolhido}")
 
             except Exception as e:
                 st.error(f"Erro ao processar o documento: {e}")
