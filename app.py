@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 from google import genai
-from google.genai import types
 import json
 import tempfile
 import os
@@ -35,7 +34,7 @@ if uploaded_file is not None:
         with st.spinner("Analisando o relatório e extraindo procedimentos..."):
             temp_path = None
             try:
-                # Inicializa o cliente oficial com a nova SDK (suporta chaves AQ... e AIzaSy...)
+                # Inicializa o cliente oficial google-genai
                 client = genai.Client(api_key=api_key)
 
                 # Salva o arquivo temporariamente em disco
@@ -72,12 +71,11 @@ if uploaded_file is not None:
                 # Upload do arquivo PDF usando o File API
                 uploaded_pdf = client.files.upload(file=temp_path)
 
-                # Chamada do modelo Gemini 1.5 Flash
+                # Chamada do modelo atualizado (gemini-3.8-flash)
                 response = client.models.generate_content(
-                    model='gemini-2.5-flash',
+                    model='gemini-3.8-flash',
                     contents=[uploaded_pdf, prompt]
                 )
-                
 
                 # Limpeza e parsing do JSON
                 raw_json = response.text.replace("```json", "").replace("```", "").strip()
