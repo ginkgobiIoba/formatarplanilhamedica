@@ -99,16 +99,11 @@ def reconstruir_registros(texto):
 
 def criar_dataframe_procedimentos(registros):
 
-    medicos_conhecidos = [
+    dados = []
+
+    medicos = [
         "FABRICIO CHAVES NOVAES",
         "RODRIGO SOUSA MADEIRA CAMPOS"
-    ]
-
-    especialidades = [
-        "Urologia",
-        "Cardiologia",
-        "Ortopedia",
-        "Cirurgia Geral"
     ]
 
     funcoes = [
@@ -119,18 +114,29 @@ def criar_dataframe_procedimentos(registros):
         "Anestesista"
     ]
 
-    dados = []
+    especialidades = [
+        "Urologia",
+        "Cardiologia",
+        "Ortopedia",
+        "Cirurgia Geral"
+    ]
 
     for linha in registros:
 
         atendimento = ""
         tipo = ""
         tuss = ""
-        data = ""
-        valor = ""
-        medico = ""
+        paciente = ""
+        procedimento = ""
         especialidade = ""
         funcao = ""
+        medico = ""
+        data = ""
+        valor = ""
+
+        # -------------------
+        # Dados básicos
+        # -------------------
 
         m = re.search(
             r"^(\d+)\s+(INT|AMB)\s+(\d+)",
@@ -158,34 +164,85 @@ def criar_dataframe_procedimentos(registros):
         if m:
             valor = m.group(1)
 
-        for med in medicos_conhecidos:
+        # -------------------
+        # Médico
+        # -------------------
 
+        for med in medicos:
             if med in linha:
                 medico = med
                 break
 
-        for esp in especialidades:
+        # -------------------
+        # Especialidade
+        # -------------------
 
+        for esp in especialidades:
             if esp in linha:
                 especialidade = esp
                 break
 
-        for func in funcoes:
+        # -------------------
+        # Função
+        # -------------------
 
-            if func in linha:
-                funcao = func
+        for f in funcoes:
+            if f in linha:
+                funcao = f
                 break
+
+        # -------------------
+        # Paciente + Procedimento
+        # -------------------
+
+        if especialidade:
+
+            trecho = re.sub(
+                r"^\d+\s+(INT|AMB)\s+\d+\s+",
+                "",
+                linha
+            )
+
+            pos_esp = trecho.find(especialidade)
+
+            if pos_esp > 0:
+
+                antes_especialidade = trecho[:pos_esp]
+
+                tokens = antes_especialidade.split()
+
+                paciente_tokens = []
+                procedimento_tokens = []
+
+                terminou_paciente = False
+
+                for token in tokens:
+
+                    if (
+                        not terminou_paciente and
+                        token == token.upper() and
+                        any(c.isalpha() for c in token)
+                    ):
+                        paciente_tokens.append(token)
+
+                    else:
+                        terminou_paciente = True
+                        procedimento_tokens.append(token)
+
+                paciente = " ".join(paciente_tokens)
+                procedimento = " ".join(procedimento_tokens)
 
         dados.append({
             "Atendimento": atendimento,
             "Tipo": tipo,
             "TUSS": tuss,
+            "Paciente": paciente,
+            "Procedimento": procedimento,
             "Especialidade": especialidade,
             "Função": funcao,
             "Médico": medico,
             "Data": data,
-            "Valor": valor,
-            "Conteúdo": linha
+            "Valor": valor
         })
 
     return pd.DataFrame(dados)
