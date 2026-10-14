@@ -242,7 +242,8 @@ def criar_dataframe_procedimentos(registros):
             "Função": funcao,
             "Médico": medico,
             "Data": data,
-            "Valor": valor
+            "Valor": valor,
+            "Conteúdo": linha
         })
 
     return pd.DataFrame(dados)
@@ -266,10 +267,13 @@ def criar_dataframe_itens(texto):
         data = ""
         valor = ""
 
-        m = re.search(
-            r"^(\d+)",
+       valores = re.findall(
+            r"\d[\d\.]*,\d{2}",
             linha
         )
+
+        if valores:
+            valor = valores[-1]
 
         if m:
             atendimento = m.group(1)
@@ -282,13 +286,15 @@ def criar_dataframe_itens(texto):
         if m:
             data = m.group(1)
 
-        m = re.search(
-            r"(\d[\d\.]*,\d{2})$",
+        valores = re.findall(
+            r"\d[\d\.]*,\d{2}",
             linha
         )
 
-        if m:
-            valor = m.group(1)
+        if valores:
+            valor = valores[-1]
+        else:
+            valor = ""
 
         registros.append({
             "Atendimento": atendimento,
@@ -424,29 +430,46 @@ if arquivo is not None:
 
     with aba1:
 
-        filtro = st.text_input(
-            "Pesquisar Procedimentos"
-        )
-
         df_exibir = df_proc.copy()
 
-        if filtro:
-
-            df_exibir = df_exibir[
-                df_exibir["Conteúdo"]
-                .str.contains(
-                    filtro,
-                    case=False,
-                    na=False
-                )
-            ]
-
-        st.dataframe(
-            df_exibir,
-            use_container_width=True,
-            height=600
+        medicos_disponiveis = sorted(
+            [m for m in df_proc["Médico"].dropna().unique() if m]
         )
 
+        medicos_selecionados = st.multiselect(
+            "Filtrar Médico",
+            medicos_disponiveis,
+            default=medicos_disponiveis
+        )
+
+    if medicos_selecionados:
+
+        df_exibir = df_exibir[
+            df_exibir["Médico"].isin(
+                medicos_selecionados
+            )
+        ]
+
+    filtro = st.text_input(
+        "Pesquisar Procedimentos"
+    )
+
+    if filtro:
+
+        df_exibir = df_exibir[
+            df_exibir["Conteúdo"]
+            .str.contains(
+                filtro,
+                case=False,
+                na=False
+            )
+        ]
+
+    st.dataframe(
+        df_exibir,
+        use_container_width=True,
+        height=600
+    )
     with aba2:
 
         filtro_itens = st.text_input(
