@@ -168,10 +168,40 @@ def criar_dataframe_procedimentos(registros):
         # Médico
         # -------------------
 
-        for med in medicos:
-            if med in linha:
-                medico = med
-                break
+        # Extrair médico pela posição
+
+        if funcao:
+
+            pos_funcao = linha.find(funcao)
+
+            if pos_funcao != -1:
+
+                trecho = linha[pos_funcao + len(funcao):]
+
+                # remove tudo após a data
+                match_data = re.search(
+                    r"\d{2}/\d{2}/\d{4}",
+                    trecho
+                )
+
+        if match_data:
+            trecho = trecho[:match_data.start()]
+
+        # remove números e %
+        trecho = re.sub(
+            r"\b\d+\b",
+            "",
+            trecho
+        )
+
+        trecho = trecho.replace("%", "")
+
+        palavras = trecho.split()
+
+        if len(palavras) >= 2:
+            medico = f"{palavras[0]} {palavras[1]}"
+        elif len(palavras) == 1:
+            medico = palavras[0]
 
         # -------------------
         # Especialidade
