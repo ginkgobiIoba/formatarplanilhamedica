@@ -261,10 +261,6 @@ REGRAS:
                 f"Erro ao processar o documento: {e}"
             )
 
-        finally:
-
-            if (
-                temp_path
-                and os.path.exists(temp_path)
-            ):
-        os.remove(temp_path)
+       finally:
+            if temp_path and os.path.exists(temp_path):
+                os.remove(temp_path)
