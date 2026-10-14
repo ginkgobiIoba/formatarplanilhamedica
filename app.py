@@ -267,4 +267,4 @@ REGRAS:
                 temp_path
                 and os.path.exists(temp_path)
             ):
-         
+        os.remove(temp_path)
