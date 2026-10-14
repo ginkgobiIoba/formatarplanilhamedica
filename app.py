@@ -164,29 +164,81 @@ def criar_dataframe_procedimentos(registros):
         if m:
             valor = m.group(1)
 
+       # -------------------
+# Médico
+# -------------------
+
+# Extrair médico pela posição
+
+if funcao:
+
+    pos_funcao = linha.find(funcao)
+
+    if pos_funcao != -1:
+
+        trecho = linha[pos_funcao + len(funcao):]
+
+    data_match = re.search(
+        r"\d{2}/\d{2}/\d{4}",
+        trecho
+    )
+
+    if data_match:
+        trecho = trecho[:data_match.start()]
+
+# remove números e %
+
+trecho = re.sub(
+    r"\b\d+\b",
+    "",
+    trecho
+)
+
+trecho = trecho.replace("%", "")
+
+palavras = trecho.split()
+
+if len(palavras) >= 2:
+    medico = f"{palavras[0]} {palavras[1]}"
+elif len(palavras) == 1:
+    medico = palavras[0]
+    
         # -------------------
-        # Médico
+        # Especialidade
         # -------------------
+
+        for esp in especialidades:
+            if esp in linha:
+                especialidade = esp
+                break
+     
+        # -------------------
+        # Função
+        # -------------------
+
+        for f in funcoes:
+            if f in linha:
+                funcao = f
+                break
 
         # Extrair médico pela posição
 
-        if funcao:
+if funcao:
 
-            pos_funcao = linha.find(funcao)
+    pos_funcao = linha.find(funcao)
 
-            if pos_funcao != -1:
+    if pos_funcao != -1:
 
-                trecho = linha[pos_funcao + len(funcao):]
+        trecho = linha[pos_funcao + len(funcao):]
 
-            data_match = re.search(
-                r"\d{2}/\d{2}/\d{4}",
-                trecho
-            )
+        data_match = re.search(
+            r"\d{2}/\d{2}/\d{4}",
+            trecho
+        )
 
-            if data_match:
-                trecho = trecho[:data_match.start()]
+        if data_match:
+            trecho = trecho[:data_match.start()]
 
-        # remove números e %
         trecho = re.sub(
             r"\b\d+\b",
             "",
@@ -201,24 +253,6 @@ def criar_dataframe_procedimentos(registros):
             medico = f"{palavras[0]} {palavras[1]}"
         elif len(palavras) == 1:
             medico = palavras[0]
-
-        # -------------------
-        # Especialidade
-        # -------------------
-
-        for esp in especialidades:
-            if esp in linha:
-                especialidade = esp
-                break
-
-        # -------------------
-        # Função
-        # -------------------
-
-        for f in funcoes:
-            if f in linha:
-                funcao = f
-                break
 
         # -------------------
         # Paciente + Procedimento
