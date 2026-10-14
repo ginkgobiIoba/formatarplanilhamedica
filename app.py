@@ -164,46 +164,7 @@ def criar_dataframe_procedimentos(registros):
         if m:
             valor = m.group(1)
 
-       # -------------------
-# Médico
-# -------------------
-
-# Extrair médico pela posição
-
-if funcao:
-
-    pos_funcao = linha.find(funcao)
-
-    if pos_funcao != -1:
-
-        trecho = linha[pos_funcao + len(funcao):]
-
-    data_match = re.search(
-        r"\d{2}/\d{2}/\d{4}",
-        trecho
-    )
-
-    if data_match:
-        trecho = trecho[:data_match.start()]
-
-# remove números e %
-
-trecho = re.sub(
-    r"\b\d+\b",
-    "",
-    trecho
-)
-
-trecho = trecho.replace("%", "")
-
-palavras = trecho.split()
-
-if len(palavras) >= 2:
-    medico = f"{palavras[0]} {palavras[1]}"
-elif len(palavras) == 1:
-    medico = palavras[0]
-    
-        # -------------------
+                # -------------------
         # Especialidade
         # -------------------
 
@@ -211,7 +172,7 @@ elif len(palavras) == 1:
             if esp in linha:
                 especialidade = esp
                 break
-     
+
         # -------------------
         # Função
         # -------------------
@@ -221,79 +182,19 @@ elif len(palavras) == 1:
                 funcao = f
                 break
 
-        # Extrair médico pela posição
-
-if funcao:
-
-    pos_funcao = linha.find(funcao)
-
-    if pos_funcao != -1:
-
-        trecho = linha[pos_funcao + len(funcao):]
-
-        data_match = re.search(
-            r"\d{2}/\d{2}/\d{4}",
-            trecho
-        )
-
-        if data_match:
-            trecho = trecho[:data_match.start()]
-
-        trecho = re.sub(
-            r"\b\d+\b",
-            "",
-            trecho
-        )
-
-        trecho = trecho.replace("%", "")
-
-        palavras = trecho.split()
-
-        if len(palavras) >= 2:
-            medico = f"{palavras[0]} {palavras[1]}"
-        elif len(palavras) == 1:
-            medico = palavras[0]
-
         # -------------------
-        # Paciente + Procedimento
+        # Médico
         # -------------------
 
-        if especialidade:
+        medico = ""
 
-            trecho = re.sub(
-                r"^\d+\s+(INT|AMB)\s+\d+\s+",
-                "",
-                linha
-            )
+        if "FABRICIO CHAVES" in linha:
+            medico = "FABRICIO CHAVES"
 
-            pos_esp = trecho.find(especialidade)
+        elif "RODRIGO SOUSA" in linha:
+            medico = "RODRIGO SOUSA"
 
-            if pos_esp > 0:
 
-                antes_especialidade = trecho[:pos_esp]
-
-                tokens = antes_especialidade.split()
-
-                paciente_tokens = []
-                procedimento_tokens = []
-
-                terminou_paciente = False
-
-                for token in tokens:
-
-                    if (
-                        not terminou_paciente and
-                        token == token.upper() and
-                        any(c.isalpha() for c in token)
-                    ):
-                        paciente_tokens.append(token)
-
-                    else:
-                        terminou_paciente = True
-                        procedimento_tokens.append(token)
-
-                paciente = " ".join(paciente_tokens)
-                procedimento = " ".join(procedimento_tokens)
 
         dados.append({
             "Atendimento": atendimento,
