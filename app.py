@@ -188,11 +188,54 @@ def criar_dataframe_procedimentos(registros):
 
         medico = ""
 
-        if "FABRICIO CHAVES" in linha:
-            medico = "FABRICIO CHAVES"
+        if funcao:
 
-        elif "RODRIGO SOUSA" in linha:
-            medico = "RODRIGO SOUSA"
+            pos_funcao = linha.find(funcao)
+
+            if pos_funcao != -1:
+
+                trecho_medico = linha[
+                    pos_funcao + len(funcao):
+                ]
+
+                data_match = re.search(
+                    r"\d{2}/\d{2}/\d{4}",
+                    trecho_medico
+                )
+
+                if data_match:
+                    trecho_medico = trecho_medico[
+                        :data_match.start()
+                    ]
+
+                palavras = trecho_medico.split()
+
+                ignorar = {
+                    "CABESP",
+                    "ASSOCIADOS",
+                    "PORTO",
+                    "OURO",
+                    "DIAMANTE",
+                    "EXECUTIVO",
+                    "PREMIUM",
+                    "MAX",
+                    "Q"
+                }
+
+                palavras_medico = []
+
+                for palavra in palavras:
+
+                    if palavra.upper() in ignorar:
+                        break
+
+                    palavras_medico.append(
+                        palavra
+                    )
+
+                medico = " ".join(
+                    palavras_medico[:3]
+                )
 
 
 
