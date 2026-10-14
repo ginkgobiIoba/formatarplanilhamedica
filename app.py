@@ -267,7 +267,7 @@ def criar_dataframe_itens(texto):
         data = ""
         valor = ""
 
-       valores = re.findall(
+        valores = re.findall(
             r"\d[\d\.]*,\d{2}",
             linha
         )
