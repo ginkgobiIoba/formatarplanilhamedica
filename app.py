@@ -5,7 +5,7 @@ import re
 from io import BytesIO
 
 # ==================================================
-# CONFIGURAÇÃO
+# CONFIG
 # ==================================================
 
 st.set_page_config(
@@ -21,8 +21,7 @@ Faça upload do PDF para:
 
 - Extrair procedimentos
 - Extrair itens de repasse
-- Filtrar registros
-- Visualizar totais
+- Visualizar os dados
 - Exportar para Excel
 """)
 
@@ -38,10 +37,10 @@ def extrair_texto_pdf(arquivo):
 
         for pagina in pdf.pages:
 
-            conteudo = pagina.extract_text()
+            pagina_texto = pagina.extract_text()
 
-            if conteudo:
-                texto += conteudo + "\n"
+            if pagina_texto:
+                texto += pagina_texto + "\n"
 
     return texto
 
@@ -72,9 +71,11 @@ def separar_secoes(texto):
     return procedimentos, itens
 
 
-def limpar_linhas(texto):
+def reconstruir_registros(texto):
 
-    linhas = []
+    registros = []
+
+    atual = ""
 
     for linha in texto.split("\n"):
 
@@ -83,46 +84,102 @@ def limpar_linhas(texto):
         if not linha:
             continue
 
-        linhas.append(linha)
+        if re.match(r"^\d+\s+(INT|AMB)\s+", linha):
 
-    return linhas
+            if atual:
+                registros.append(atual)
+
+            atual = linha
+
+        else:
+
+            if atual:
+                atual += " " + linha
+
+    if atual:
+        registros.append(atual)
+
+    return registros
 
 
-def criar_dataframe(linhas):
+def criar_dataframe(registros):
 
-    registros = []
+    dados = []
 
-    for linha in linhas:
+    for linha in registros:
 
         atendimento = ""
-
-        m = re.search(
-            r"^\d{6,}",
-            linha
-        )
-
-        if m:
-            atendimento = m.group()
-
+        tipo = ""
+        tuss = ""
         data = ""
-
-        m = re.search(
-            r"\d{2}/\d{2}/\d{4}",
-            linha
-        )
-
-        if m:
-            data = m.group()
-
         valor = ""
 
-        m = re.search(
+        match = re.search(
+            r"^(\d+)\s+(INT|AMB)\s+(\d+)",
+            linha
+        )
+
+        if match:
+            atendimento = match.group(1)
+            tipo = match.group(2)
+            tuss = match.group(3)
+
+        match_data = re.search(
+            r"(\d{2}/\d{2}/\d{4})",
+            linha
+        )
+
+        if match_data:
+            data = match_data.group(1)
+
+        match_valor = re.search(
             r"(\d[\d\.]*,\d{2})$",
             linha
         )
 
-        if m:
-            valor = m.group(1)
+        if match_valor:
+            valor = match_valor.group(1)
+
+        dados.append({
+            "Atendimento": atendimento,
+            "Tipo": tipo,
+            "TUSS": tuss,
+            "Data": data,
+            "Valor": valor,
+            "Conteúdo": linha
+        })
+
+    return pd.DataFrame(dados)
+
+
+def criar_dataframe_itens(texto):
+
+    registros = []
+
+    for linha in texto.split("\n"):
+
+        linha = linha.strip()
+
+        if not linha:
+            continue
+
+        if "Total Itens Repasse" in linha:
+            continue
+
+        match = re.search(
+            r"^(\d+).*?(\d{2}/\d{2}/\d{4}).*?(\d[\d\.]*,\d{2})$",
+            linha
+        )
+
+        atendimento = ""
+        data = ""
+        valor = ""
+
+        if match:
+
+            atendimento = match.group(1)
+            data = match.group(2)
+            valor = match.group(3)
 
         registros.append({
             "Atendimento": atendimento,
@@ -167,14 +224,14 @@ def gerar_excel(df_proc, df_itens):
 
         df_proc.to_excel(
             writer,
-            index=False,
-            sheet_name="Procedimentos"
+            sheet_name="Procedimentos",
+            index=False
         )
 
         df_itens.to_excel(
             writer,
-            index=False,
-            sheet_name="Itens"
+            sheet_name="Itens",
+            index=False
         )
 
     buffer.seek(0)
@@ -207,20 +264,16 @@ if arquivo:
             texto_completo
         )
 
-        linhas_proc = limpar_linhas(
+        registros_proc = reconstruir_registros(
             texto_proc
         )
 
-        linhas_itens = limpar_linhas(
-            texto_itens
-        )
-
         df_proc = criar_dataframe(
-            linhas_proc
+            registros_proc
         )
 
-        df_itens = criar_dataframe(
-            linhas_itens
+        df_itens = criar_dataframe_itens(
+            texto_itens
         )
 
         df_proc = converter_valores(
@@ -237,27 +290,27 @@ if arquivo:
     # RESUMO
     # ==================================================
 
-    col1, col2, col3, col4 = st.columns(4)
+    c1, c2, c3, c4 = st.columns(4)
 
-    with col1:
+    with c1:
         st.metric(
-            "Procedimentos",
+            "Qtd Procedimentos",
             len(df_proc)
         )
 
-    with col2:
+    with c2:
         st.metric(
-            "Itens",
+            "Qtd Itens",
             len(df_itens)
         )
 
-    with col3:
+    with c3:
         st.metric(
             "Total Procedimentos",
             f"R$ {df_proc['Valor'].sum():,.2f}"
         )
 
-    with col4:
+    with c4:
         st.metric(
             "Total Itens",
             f"R$ {df_itens['Valor'].sum():,.2f}"
@@ -272,91 +325,45 @@ if arquivo:
         "📦 Itens de Repasse"
     ])
 
-    # ==================================================
-    # PROCEDIMENTOS
-    # ==================================================
-
     with tab1:
 
-        filtro_atendimento = st.text_input(
-            "Filtrar Atendimento",
-            key="proc_atendimento"
+        filtro = st.text_input(
+            "Pesquisar Procedimentos"
         )
 
-        filtro_texto = st.text_input(
-            "Pesquisar texto",
-            key="proc_texto"
-        )
+        df_filtrado = df_proc.copy()
 
-        df_proc_filtrado = df_proc.copy()
+        if filtro:
 
-        if filtro_atendimento:
-
-            df_proc_filtrado = df_proc_filtrado[
-                df_proc_filtrado["Atendimento"]
-                .astype(str)
+            df_filtrado = df_filtrado[
+                df_filtrado["Conteúdo"]
                 .str.contains(
-                    filtro_atendimento,
-                    case=False,
-                    na=False
-                )
-            ]
-
-        if filtro_texto:
-
-            df_proc_filtrado = df_proc_filtrado[
-                df_proc_filtrado["Conteúdo"]
-                .astype(str)
-                .str.contains(
-                    filtro_texto,
+                    filtro,
                     case=False,
                     na=False
                 )
             ]
 
         st.dataframe(
-            df_proc_filtrado,
+            df_filtrado,
             use_container_width=True,
             height=600
         )
 
-    # ==================================================
-    # ITENS
-    # ==================================================
-
     with tab2:
 
-        filtro_atendimento_item = st.text_input(
-            "Filtrar Atendimento",
-            key="item_atendimento"
-        )
-
-        filtro_texto_item = st.text_input(
-            "Pesquisar texto",
-            key="item_texto"
+        filtro_itens = st.text_input(
+            "Pesquisar Itens"
         )
 
         df_itens_filtrado = df_itens.copy()
 
-        if filtro_atendimento_item:
-
-            df_itens_filtrado = df_itens_filtrado[
-                df_itens_filtrado["Atendimento"]
-                .astype(str)
-                .str.contains(
-                    filtro_atendimento_item,
-                    case=False,
-                    na=False
-                )
-            ]
-
-        if filtro_texto_item:
+        if filtro_itens:
 
             df_itens_filtrado = df_itens_filtrado[
                 df_itens_filtrado["Conteúdo"]
-                .astype(str)
                 .str.contains(
-                    filtro_texto_item,
+                    filtro_itens,
                     case=False,
                     na=False
                 )
@@ -374,14 +381,14 @@ if arquivo:
 
     st.divider()
 
-    excel = gerar_excel(
+    excel_file = gerar_excel(
         df_proc,
         df_itens
     )
 
     st.download_button(
         label="📥 Baixar Excel",
-        data=excel,
+        data=excel_file,
         file_name="repasses_medicos.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
@@ -390,10 +397,17 @@ if arquivo:
     # DEBUG
     # ==================================================
 
-    with st.expander("Visualizar texto extraído do PDF"):
+    with st.expander("Ver registros reconstruídos"):
+
+        st.write("### Procedimentos")
+
+        for registro in registros_proc[:20]:
+            st.text(registro)
+
+        st.write("### Itens")
 
         st.text_area(
-            "Texto Completo",
-            texto_completo,
-            height=500
+            "Texto dos Itens",
+            texto_itens,
+            height=300
         )
