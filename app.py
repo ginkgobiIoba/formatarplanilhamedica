@@ -5,7 +5,7 @@ import re
 from io import BytesIO
 
 # ==================================================
-# CONFIG
+# CONFIGURAÇÃO
 # ==================================================
 
 st.set_page_config(
@@ -17,11 +17,13 @@ st.set_page_config(
 st.title("🏥 Normalizador de Repasses Médicos")
 
 st.markdown("""
-Faça upload do PDF e visualize:
+Faça upload do PDF para:
 
-- Procedimentos
-- Itens de Repasse
-- Exportação para Excel
+- Extrair procedimentos
+- Extrair itens de repasse
+- Filtrar registros
+- Visualizar totais
+- Exportar para Excel
 """)
 
 # ==================================================
@@ -36,10 +38,10 @@ def extrair_texto_pdf(arquivo):
 
         for pagina in pdf.pages:
 
-            pagina_texto = pagina.extract_text()
+            conteudo = pagina.extract_text()
 
-            if pagina_texto:
-                texto += pagina_texto + "\n"
+            if conteudo:
+                texto += conteudo + "\n"
 
     return texto
 
@@ -88,9 +90,70 @@ def limpar_linhas(texto):
 
 def criar_dataframe(linhas):
 
-    return pd.DataFrame({
-        "Conteúdo": linhas
-    })
+    registros = []
+
+    for linha in linhas:
+
+        atendimento = ""
+
+        m = re.search(
+            r"^\d{6,}",
+            linha
+        )
+
+        if m:
+            atendimento = m.group()
+
+        data = ""
+
+        m = re.search(
+            r"\d{2}/\d{2}/\d{4}",
+            linha
+        )
+
+        if m:
+            data = m.group()
+
+        valor = ""
+
+        m = re.search(
+            r"(\d[\d\.]*,\d{2})$",
+            linha
+        )
+
+        if m:
+            valor = m.group(1)
+
+        registros.append({
+            "Atendimento": atendimento,
+            "Data": data,
+            "Valor": valor,
+            "Conteúdo": linha
+        })
+
+    return pd.DataFrame(registros)
+
+
+def converter_valores(df):
+
+    if "Valor" not in df.columns:
+        return df
+
+    df = df.copy()
+
+    df["Valor"] = (
+        df["Valor"]
+        .astype(str)
+        .str.replace(".", "", regex=False)
+        .str.replace(",", ".", regex=False)
+    )
+
+    df["Valor"] = pd.to_numeric(
+        df["Valor"],
+        errors="coerce"
+    )
+
+    return df
 
 
 def gerar_excel(df_proc, df_itens):
@@ -104,14 +167,14 @@ def gerar_excel(df_proc, df_itens):
 
         df_proc.to_excel(
             writer,
-            sheet_name="Procedimentos",
-            index=False
+            index=False,
+            sheet_name="Procedimentos"
         )
 
         df_itens.to_excel(
             writer,
-            sheet_name="Itens de Repasse",
-            index=False
+            index=False,
+            sheet_name="Itens"
         )
 
     buffer.seek(0)
@@ -134,9 +197,11 @@ arquivo = st.file_uploader(
 
 if arquivo:
 
-    with st.spinner("Lendo PDF..."):
+    with st.spinner("Processando PDF..."):
 
-        texto_completo = extrair_texto_pdf(arquivo)
+        texto_completo = extrair_texto_pdf(
+            arquivo
+        )
 
         texto_proc, texto_itens = separar_secoes(
             texto_completo
@@ -158,44 +223,92 @@ if arquivo:
             linhas_itens
         )
 
+        df_proc = converter_valores(
+            df_proc
+        )
+
+        df_itens = converter_valores(
+            df_itens
+        )
+
     st.success("✅ PDF processado com sucesso")
 
-    st.metric(
-        "Linhas de Procedimentos",
-        len(df_proc)
-    )
+    # ==================================================
+    # RESUMO
+    # ==================================================
 
-    st.metric(
-        "Linhas de Itens",
-        len(df_itens)
-    )
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        st.metric(
+            "Procedimentos",
+            len(df_proc)
+        )
+
+    with col2:
+        st.metric(
+            "Itens",
+            len(df_itens)
+        )
+
+    with col3:
+        st.metric(
+            "Total Procedimentos",
+            f"R$ {df_proc['Valor'].sum():,.2f}"
+        )
+
+    with col4:
+        st.metric(
+            "Total Itens",
+            f"R$ {df_itens['Valor'].sum():,.2f}"
+        )
 
     # ==================================================
     # ABAS
     # ==================================================
 
-    aba1, aba2 = st.tabs([
+    tab1, tab2 = st.tabs([
         "📋 Procedimentos",
         "📦 Itens de Repasse"
     ])
 
-    # --------------------------------------------------
+    # ==================================================
     # PROCEDIMENTOS
-    # --------------------------------------------------
+    # ==================================================
 
-    with aba1:
+    with tab1:
 
-        busca_proc = st.text_input(
-            "Pesquisar em Procedimentos"
+        filtro_atendimento = st.text_input(
+            "Filtrar Atendimento",
+            key="proc_atendimento"
+        )
+
+        filtro_texto = st.text_input(
+            "Pesquisar texto",
+            key="proc_texto"
         )
 
         df_proc_filtrado = df_proc.copy()
 
-        if busca_proc:
+        if filtro_atendimento:
 
             df_proc_filtrado = df_proc_filtrado[
-                df_proc_filtrado["Conteúdo"].str.contains(
-                    busca_proc,
+                df_proc_filtrado["Atendimento"]
+                .astype(str)
+                .str.contains(
+                    filtro_atendimento,
+                    case=False,
+                    na=False
+                )
+            ]
+
+        if filtro_texto:
+
+            df_proc_filtrado = df_proc_filtrado[
+                df_proc_filtrado["Conteúdo"]
+                .astype(str)
+                .str.contains(
+                    filtro_texto,
                     case=False,
                     na=False
                 )
@@ -207,23 +320,43 @@ if arquivo:
             height=600
         )
 
-    # --------------------------------------------------
+    # ==================================================
     # ITENS
-    # --------------------------------------------------
+    # ==================================================
 
-    with aba2:
+    with tab2:
 
-        busca_itens = st.text_input(
-            "Pesquisar em Itens"
+        filtro_atendimento_item = st.text_input(
+            "Filtrar Atendimento",
+            key="item_atendimento"
+        )
+
+        filtro_texto_item = st.text_input(
+            "Pesquisar texto",
+            key="item_texto"
         )
 
         df_itens_filtrado = df_itens.copy()
 
-        if busca_itens:
+        if filtro_atendimento_item:
 
             df_itens_filtrado = df_itens_filtrado[
-                df_itens_filtrado["Conteúdo"].str.contains(
-                    busca_itens,
+                df_itens_filtrado["Atendimento"]
+                .astype(str)
+                .str.contains(
+                    filtro_atendimento_item,
+                    case=False,
+                    na=False
+                )
+            ]
+
+        if filtro_texto_item:
+
+            df_itens_filtrado = df_itens_filtrado[
+                df_itens_filtrado["Conteúdo"]
+                .astype(str)
+                .str.contains(
+                    filtro_texto_item,
                     case=False,
                     na=False
                 )
@@ -236,23 +369,25 @@ if arquivo:
         )
 
     # ==================================================
-    # DOWNLOAD EXCEL
+    # DOWNLOAD
     # ==================================================
 
-    excel_file = gerar_excel(
+    st.divider()
+
+    excel = gerar_excel(
         df_proc,
         df_itens
     )
 
     st.download_button(
         label="📥 Baixar Excel",
-        data=excel_file,
+        data=excel,
         file_name="repasses_medicos.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
     # ==================================================
-    # DEBUG OPCIONAL
+    # DEBUG
     # ==================================================
 
     with st.expander("Visualizar texto extraído do PDF"):
@@ -260,5 +395,5 @@ if arquivo:
         st.text_area(
             "Texto Completo",
             texto_completo,
-            height=400
+            height=500
         )
