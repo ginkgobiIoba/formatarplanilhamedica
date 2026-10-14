@@ -267,17 +267,16 @@ def criar_dataframe_itens(texto):
         data = ""
         valor = ""
 
-        valores = re.findall(
-            r"\d[\d\.]*,\d{2}",
+        # Atendimento
+        m = re.search(
+            r"^(\d+)",
             linha
         )
-
-        if valores:
-            valor = valores[-1]
 
         if m:
             atendimento = m.group(1)
 
+        # Data
         m = re.search(
             r"(\d{2}/\d{2}/\d{4})",
             linha
@@ -286,6 +285,7 @@ def criar_dataframe_itens(texto):
         if m:
             data = m.group(1)
 
+        # Último valor monetário da linha
         valores = re.findall(
             r"\d[\d\.]*,\d{2}",
             linha
