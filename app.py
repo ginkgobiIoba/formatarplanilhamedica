@@ -709,7 +709,7 @@ if arquivo is not None:
         "Função",
         "Médico",
         "Convênio/Plano",
-        "% Repasse",
+        "Repasse",
         "Data",
         "Valor"
     ]
