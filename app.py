@@ -408,12 +408,40 @@ def criar_dataframe_procedimentos(registros):
         if " Bilateral" in linha:
             procedimento += " Bilateral"
 
+                # -------------------
+                # Complemento Procedimento
+                # -------------------
+
+                complemento_procedimento = ""
+
+                if data:
+
+                    pos_data = linha.find(data)
+
+                    if pos_data != -1:
+
+                        texto_final = linha[pos_data:]
+
+                        match_valor = re.search(
+                            r"\d[\d\.]*,\d{2}",
+                            texto_final
+                        )
+
+                       if match_valor:
+
+                           sobra = texto_final[
+                                match_valor.end():
+                            ].strip()
+
+                           complemento_procedimento = sobra
+
         dados.append({
             "Atendimento": atendimento,
             "Tipo": tipo,
             "TUSS": tuss,
             "Paciente": paciente,
             "Procedimento": procedimento,
+            "ComplementoProcedimento": complemento_procedimento,
             "Especialidade": especialidade,
             "Função": funcao,
             "Médico": medico,
