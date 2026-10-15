@@ -250,7 +250,7 @@ def criar_dataframe_procedimentos(registros):
             "Médico": medico,
             "Data": data,
             "Valor": valor,
-            "Conteúdo": linha
+            "ConteudoCompleto": linha
         })
 
     return pd.DataFrame(dados)
