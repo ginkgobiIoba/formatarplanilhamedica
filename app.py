@@ -282,6 +282,49 @@ def criar_dataframe_procedimentos(registros):
                         paciente_palavras
                     )
 
+                # -------------------
+        # Procedimento
+        # -------------------
+
+        if especialidade:
+
+            inicio_paciente = re.search(
+                r"^\d+\s+(INT|AMB)\s+\d+\s+",
+                linha
+            )
+
+            if inicio_paciente:
+
+                texto_tmp = linha[
+                    inicio_paciente.end():
+                ]
+
+                fim = texto_tmp.find(
+                    especialidade
+                )
+
+                if fim > 0:
+
+                    trecho = texto_tmp[:fim]
+
+                    palavras = trecho.split()
+
+                    ponto_corte = 0
+
+                    for i, palavra in enumerate(palavras):
+
+                        if (
+                            palavra.isupper()
+                            and any(c.isalpha() for c in palavra)
+                        ):
+                            ponto_corte = i + 1
+                        else:
+                            break
+
+                    procedimento = " ".join(
+                        palavras[ponto_corte:]
+                    )
+
 
         dados.append({
             "Atendimento": atendimento,
