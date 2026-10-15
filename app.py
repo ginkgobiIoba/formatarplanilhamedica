@@ -412,28 +412,28 @@ def criar_dataframe_procedimentos(registros):
                 # Complemento Procedimento
                 # -------------------
 
-                complemento_procedimento = ""
+             complemento_procedimento = ""
 
-                if data:
+             if data:
 
-                    pos_data = linha.find(data)
+                pos_data = linha.find(data)
 
-                    if pos_data != -1:
+                if pos_data != -1:
 
-                        texto_final = linha[pos_data:]
+                    texto_final = linha[pos_data:]
 
-                        match_valor = re.search(
-                            r"\d[\d\.]*,\d{2}",
-                            texto_final
-                        )
+                      match_valor = re.search(
+                        r"\d[\d\.]*,\d{2}",
+                        texto_final
+                      )
 
-                       if match_valor:
+                      if match_valor:
 
-                           sobra = texto_final[
-                                match_valor.end():
-                            ].strip()
+                        sobra = texto_final[
+                            match_valor.end():
+                        ].strip()
 
-                           complemento_procedimento = sobra
+                        complemento_procedimento = sobra
 
         dados.append({
             "Atendimento": atendimento,
