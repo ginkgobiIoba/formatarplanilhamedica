@@ -399,15 +399,6 @@ def criar_dataframe_procedimentos(registros):
                             )
 
 
-        if " Laser " in linha:
-            procedimento += " Laser"
-
-        if " Unilateral" in linha:
-            procedimento += " Unilateral"
-
-        if " Bilateral" in linha:
-            procedimento += " Bilateral"
-
         # -------------------
         # Complemento Procedimento
         # -------------------
