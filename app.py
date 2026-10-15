@@ -568,6 +568,31 @@ if arquivo is not None:
 
         df_exibir = df_proc.copy()
 
+        # Filtro Convênio/Plano
+
+opcoes_convenio = sorted(
+    [
+        c for c in
+        df_proc["Convênio/Plano"]
+        .dropna()
+        .unique()
+        if c
+    ]
+)
+
+convenio_sel = st.multiselect(
+    "Filtrar Convênio/Plano",
+    options=opcoes_convenio,
+    default=opcoes_convenio
+)
+
+if convenio_sel:
+
+    df_exibir = df_exibir[
+        df_exibir["Convênio/Plano"]
+        .isin(convenio_sel)
+    ]
+
         medicos_disponiveis = sorted(
             [m for m in df_proc["Médico"].dropna().unique() if m]
         )
