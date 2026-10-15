@@ -379,6 +379,26 @@ def criar_dataframe_procedimentos(registros):
                     procedimento = " ".join(
                         palavras[ponto_corte:]
                     )
+                    procedimento = " ".join(
+                        palavras[ponto_corte:]
+                    )
+
+        # Remover coluna Via (U, M, D, B)
+
+                    if procedimento:
+
+                        palavras_proc = procedimento.split()
+
+                        if (
+                            len(palavras_proc) > 0
+                            and palavras_proc[-1] in ["U", "M", "D", "B"]
+                        ):
+
+                            procedimento = " ".join(
+                                palavras_proc[:-1]
+                            )
+
+
         if " Laser " in linha:
             procedimento += " Laser"
 
