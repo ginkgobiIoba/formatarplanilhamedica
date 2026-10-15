@@ -243,7 +243,7 @@ def criar_dataframe_procedimentos(registros):
             "Atendimento": atendimento,
             "Tipo": tipo,
             "TUSS": tuss,
-            "Paciente": teste,
+            "Paciente": "teste",
             "Procedimento": procedimento,
             "Especialidade": especialidade,
             "Função": funcao,
