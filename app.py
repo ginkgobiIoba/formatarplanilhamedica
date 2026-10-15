@@ -534,26 +534,8 @@ if arquivo is not None:
     # MÉTRICAS
     # ==========================================
 
-    c1, c2, c3, c4 = st.columns(4)
-
-    c1.metric(
-        "Procedimentos",
-        len(df_proc)
-    )
-
-    c2.metric(
-        "Itens",
-        len(df_itens)
-    )
-
-    c3.metric(
-        "Total Procedimentos",
-        f"R$ {df_proc['Valor'].sum():,.2f}"
-    )
-
-    c4.metric(
-        "Total Itens",
-        f"R$ {df_itens['Valor'].sum():,.2f}"
+    st.info(
+        f"{len(df_proc)} procedimentos e {len(df_itens)} itens encontrados."
     )
 
     # ==========================================
@@ -569,7 +551,7 @@ if arquivo is not None:
         df_exibir = df_proc.copy()
 
         busca_convenio = st.text_input(
-            "Pesquisar Convênio/Plano (ex: sul, porto, cabesp)"
+            "Pesquisar Convênio/Plano (Ex: Porto, Sul América)"
         )
 
         if busca_convenio:
