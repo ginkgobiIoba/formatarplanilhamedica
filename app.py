@@ -236,14 +236,58 @@ def criar_dataframe_procedimentos(registros):
                 medico = " ".join(
                     palavras_medico[:3]
                 )
+        # -------------------
+        # Paciente
+        # -------------------
 
+        if especialidade:
+
+            inicio_paciente = re.search(
+                r"^\d+\s+(INT|AMB)\s+\d+\s+",
+                linha
+            )
+
+            if inicio_paciente:
+
+                texto_tmp = linha[
+                    inicio_paciente.end():
+                ]
+
+                fim = texto_tmp.find(
+                    especialidade
+                )
+
+                if fim > 0:
+
+                    trecho = texto_tmp[:fim]
+
+                    palavras = trecho.split()
+
+                    paciente_palavras = []
+
+                    for palavra in palavras:
+
+                        if (
+                            palavra.isupper()
+                            and any(c.isalpha() for c in palavra)
+                        ):
+                            paciente_palavras.append(
+                                palavra
+                            )
+
+                        else:
+                            break
+
+                    paciente = " ".join(
+                        paciente_palavras
+                    )
 
 
         dados.append({
             "Atendimento": atendimento,
             "Tipo": tipo,
             "TUSS": tuss,
-            "Paciente": "teste",
+            "Paciente": paciente,
             "Procedimento": procedimento,
             "Especialidade": especialidade,
             "Função": funcao,
