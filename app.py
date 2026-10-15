@@ -131,8 +131,7 @@ def criar_dataframe_procedimentos(registros):
         especialidade = ""
         funcao = ""
         medico = ""
-        convenio = ""
-        plano = ""
+        convenio_plano = ""
         data = ""
         valor = ""
 
@@ -269,12 +268,7 @@ def criar_dataframe_procedimentos(registros):
 
                 trecho = trecho.strip()
 
-                plano = trecho
-
-                palavras = trecho.split()
-
-                if palavras:
-                    convenio = palavras[0]
+                convenio_plano = trecho
                     
         # -------------------
         # Paciente
@@ -382,8 +376,7 @@ def criar_dataframe_procedimentos(registros):
             "Especialidade": especialidade,
             "Função": funcao,
             "Médico": medico,
-            "Convênio": convenio,
-            "Plano": plano,
+            "Convênio/Plano": convenio_plano,
             "Data": data,
             "Valor": valor,
             "ConteudoCompleto": linha
