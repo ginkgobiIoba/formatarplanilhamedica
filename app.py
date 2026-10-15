@@ -442,7 +442,15 @@ def criar_dataframe_procedimentos(registros):
                     "",
                     complemento_procedimento
                 ).strip()
-                
+
+                # Junta complemento ao procedimento
+
+                if complemento_procedimento:
+
+                    procedimento = (
+                        procedimento + " " +
+                        complemento_procedimento
+                    ).strip()
 
         dados.append({
             "Atendimento": atendimento,
