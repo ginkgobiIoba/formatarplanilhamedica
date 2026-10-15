@@ -154,6 +154,7 @@ def criar_dataframe_procedimentos(registros):
         medico = ""
         convenio_plano = ""
         data = ""
+        percentual = ""
         valor = ""
 
         # -------------------
@@ -455,6 +456,7 @@ def criar_dataframe_procedimentos(registros):
             "Médico": medico,
             "Convênio/Plano": convenio_plano,
             "Data": data,
+            "Repasse": percentual,
             "Valor": valor,
             "ConteudoCompleto": linha
         })
@@ -497,6 +499,14 @@ def criar_dataframe_itens(texto):
 
         if m:
             data = m.group(1)
+
+        m = re.search(
+            r"(\d+)\s*%",
+            linha
+        )
+
+        if m:
+            percent*al = m.group(1)
 
         # Último valor monetário da linha
         valores = re.findall(
