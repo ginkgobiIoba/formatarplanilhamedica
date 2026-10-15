@@ -176,6 +176,14 @@ def criar_dataframe_procedimentos(registros):
             linha
         )
 
+        m = re.search(
+            r"(\d+)\s*%",
+            linha
+        )
+
+        if m:
+            percentual = m.group(1)
+
         if m:
             data = m.group(1)
 
@@ -713,7 +721,7 @@ if arquivo is not None:
         "Data",
         "Valor"
     ]
-    st.write(df_exibir.columns.tolist())
+
     st.dataframe(
         df_exibir[colunas_exibir],
         use_container_width=True,
