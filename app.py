@@ -1,4 +1,4 @@
-import streamlit as st
+    import streamlit as st
 import pdfplumber
 import pandas as pd
 import re
@@ -427,6 +427,22 @@ def criar_dataframe_procedimentos(registros):
                         match_valor.end():
                     ].strip()
                     complemento_procedimento = sobra
+                    
+                complemento_procedimento = (
+                    complemento_procedimento
+                    .replace(" Principal", "")
+                    .replace(" Primeiro Auxiliar", "")
+                    .replace(" Segundo Auxiliar", "")
+                    .replace(" Clínico", "")
+                    .replace(" APARTAMENTO", "")
+                )
+
+                complemento_procedimento = re.sub(
+                    r"CORPORATIVA.*",
+                    "",
+                    complemento_procedimento
+                ).strip()
+                
 
         dados.append({
             "Atendimento": atendimento,
