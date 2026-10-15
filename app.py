@@ -131,6 +131,8 @@ def criar_dataframe_procedimentos(registros):
         especialidade = ""
         funcao = ""
         medico = ""
+        convenio = ""
+        plano = ""
         data = ""
         valor = ""
 
@@ -236,6 +238,44 @@ def criar_dataframe_procedimentos(registros):
                 medico = " ".join(
                     palavras_medico[:3]
                 )
+
+                # -------------------
+        # Convênio e Plano
+        # -------------------
+
+        data_match = re.search(
+            r"\d{2}/\d{2}/\d{4}",
+            linha
+        )
+
+        if medico and data_match:
+
+            pos_medico = linha.find(medico)
+
+            if pos_medico != -1:
+
+                trecho = linha[
+                    pos_medico + len(medico):
+                    data_match.start()
+                ]
+
+                trecho = re.sub(
+                    r"\b\d+\b",
+                    "",
+                    trecho
+                )
+
+                trecho = trecho.replace("%", "")
+
+                trecho = trecho.strip()
+
+                plano = trecho
+
+                palavras = trecho.split()
+
+                if palavras:
+                    convenio = palavras[0]
+                    
         # -------------------
         # Paciente
         # -------------------
@@ -342,6 +382,8 @@ def criar_dataframe_procedimentos(registros):
             "Especialidade": especialidade,
             "Função": funcao,
             "Médico": medico,
+            "Convênio": convenio,
+            "Plano": plano,
             "Data": data,
             "Valor": valor,
             "ConteudoCompleto": linha
