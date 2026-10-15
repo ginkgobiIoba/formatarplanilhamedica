@@ -19,15 +19,15 @@ st.title("🏥 Normalizador de Repasses Médicos")
 st.markdown("""
 <style>
 div[data-baseweb="select"] {
-    background-color: #cbcbcb;
+    background-color: #eef1f5;
 }
 
 input {
-    background-color: #ffffff !important;
+    background-color: #eef1f5 !important;
 }
 
 .stTextInput input {
-    background-color: #cbcbcb !important;
+    background-color: #eef1f5 !important;
 }
 
 .stMultiSelect {
