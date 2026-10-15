@@ -23,7 +23,7 @@ div[data-baseweb="select"] {
 }
 
 input {
-    background-color: #cbcbcb !important;
+    background-color: #ffffff !important;
 }
 
 .stTextInput input {
