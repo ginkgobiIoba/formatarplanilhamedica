@@ -692,8 +692,19 @@ if arquivo is not None:
             )
         ]
 
+    colunas_exibir = [
+        "Paciente",
+        "Procedimento",
+        "Especialidade",
+        "Função",
+        "Médico",
+        "Convênio/Plano",
+        "Data",
+        "Valor"
+    ]
+
     st.dataframe(
-        df_exibir,
+        df_exibir[colunas_exibir],
         use_container_width=True,
         height=600
     )
