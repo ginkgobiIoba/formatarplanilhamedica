@@ -506,7 +506,7 @@ def criar_dataframe_itens(texto):
         )
 
         if m:
-            percent*al = m.group(1)
+            percentual = m.group(1)
 
         # Último valor monetário da linha
         valores = re.findall(
