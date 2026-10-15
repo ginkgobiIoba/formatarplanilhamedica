@@ -17,6 +17,27 @@ st.set_page_config(
 st.title("🏥 Normalizador de Repasses Médicos")
 
 st.markdown("""
+<style>
+div[data-baseweb="select"] {
+    background-color: #ffffff;
+}
+
+input {
+    background-color: #ffffff !important;
+}
+
+.stTextInput input {
+    background-color: #ffffff !important;
+}
+
+.stMultiSelect {
+    background-color: #ffffff !important;
+    border-radius: 8px;
+}
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown("""
 Faça upload do PDF para visualizar e exportar os dados.
 """)
 
