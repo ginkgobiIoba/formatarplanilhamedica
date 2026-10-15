@@ -23,15 +23,15 @@ div[data-baseweb="select"] {
 }
 
 input {
-    background-color: #ff6666 !important;
+    background-color: #cbcbcb !important;
 }
 
 .stTextInput input {
-    background-color: #00a8ff !important;
+    background-color: #cbcbcb !important;
 }
 
 .stMultiSelect {
-    background-color: #008000 !important;
+    background-color: #ffffff !important;
     border-radius: 8px;
 }
 </style>
