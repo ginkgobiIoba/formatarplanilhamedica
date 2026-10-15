@@ -178,6 +178,14 @@ def criar_dataframe_procedimentos(registros):
 
         if m:
             data = m.group(1)
+            
+        m = re.search(
+            r"(\d+)\s*%",
+            linha
+        )
+
+        if m:
+            percentual = m.group(1)
 
         m = re.search(
             r"(\d[\d\.]*,\d{2})",
@@ -187,14 +195,6 @@ def criar_dataframe_procedimentos(registros):
         if m:
             valor = m.group(1)
 
-        
-        m = re.search(
-            r"(\d+)\s*%",
-            linha
-        )
-
-        if m:
-            percentual = m.group(1)
 
                 # -------------------
         # Especialidade
