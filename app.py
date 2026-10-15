@@ -568,7 +568,7 @@ if arquivo is not None:
 
         df_exibir = df_proc.copy()
 
-        busca_convenio = st.text_input(  
+        busca_convenio = st.text_input(
             "Pesquisar Convênio/Plano (ex: sul, porto, cabesp)"
         )
 
@@ -580,23 +580,24 @@ if arquivo is not None:
                 if t.strip()
             ]
 
-        mascara = (
-            df_exibir["Convênio/Plano"]
-            .str.contains("__nunca_vai_existir__", na=False)
-        )
-
-        for termo in termos:
-
-            mascara = mascara | (
-                df_exibir["Convênio/Plano"]
-                .str.contains(
-                    termo,
-                    case=False,
-                    na=False
-                )
+            mascara = pd.Series(
+                False,
+                index=df_exibir.index
             )
 
-        df_exibir = df_exibir[mascara]
+            for termo in termos:
+
+                mascara = mascara | (
+                    df_exibir["Convênio/Plano"]
+                    .astype(str)
+                    .str.contains(
+                        termo,
+                        case=False,
+                        na=False
+                    )
+                )
+
+            df_exibir = df_exibir[mascara]
         
         
         medicos_disponiveis = sorted(
