@@ -324,7 +324,14 @@ def criar_dataframe_procedimentos(registros):
                     procedimento = " ".join(
                         palavras[ponto_corte:]
                     )
+              if " Laser " in linha:
+                 procedimento += " Laser"
 
+              if " Unilateral" in linha:
+                 procedimento += " Unilateral"
+
+              if " Bilateral" in linha:
+                 procedimento += " Bilateral"
 
         dados.append({
             "Atendimento": atendimento,
