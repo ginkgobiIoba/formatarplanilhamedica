@@ -567,30 +567,37 @@ if arquivo is not None:
     with aba1:
 
         df_exibir = df_proc.copy()
-        # Filtro Convênio/Plano
 
-    opcoes_convenio = sorted(
-        [
-            c for c in
-            df_proc["Convênio/Plano"]
-            .dropna()
-            .unique()
-            if c
-        ]
-    )
+        busca_convenio = st.text_input(  
+            "Pesquisar Convênio/Plano (ex: sul, porto, cabesp)"
+        )
 
-    convenio_sel = st.multiselect(
-        "Filtrar Convênio/Plano",
-        options=opcoes_convenio,
-        default=opcoes_convenio
-    )
+        if busca_convenio:
 
-    if convenio_sel:
+            termos = [
+                t.strip()
+                for t in busca_convenio.replace(";", ",").split(",")
+                if t.strip()
+            ]
 
-        df_exibir = df_exibir[
+        mascara = (
             df_exibir["Convênio/Plano"]
-            .isin(convenio_sel)
-        ]
+            .str.contains("__nunca_vai_existir__", na=False)
+        )
+
+        for termo in termos:
+
+            mascara = mascara | (
+                df_exibir["Convênio/Plano"]
+                .str.contains(
+                    termo,
+                    case=False,
+                    na=False
+                )
+            )
+
+        df_exibir = df_exibir[mascara]
+        
         
         medicos_disponiveis = sorted(
             [m for m in df_proc["Médico"].dropna().unique() if m]
